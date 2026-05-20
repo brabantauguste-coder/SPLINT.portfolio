@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans, system-ui, sans-serif); background: transparent; color: var(--color-text-primary); }
+
+  .header { padding: 1.5rem 0 1rem; display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo svg { width: 22px; height: 22px; fill: white; }
+  .header h1 { font-size: 20px; font-weight: 500; }
+  .header span { font-size: 13px; color: var(--color-text-secondary); margin-left: 4px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .kpi { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
+  .kpi-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .kpi-value { font-size: 22px; font-weight: 500; }
+  .kpi-value.green { color: #1D9E75; }
+  .kpi-value.blue { color: #185FA5; }
+
+  .section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; margin-top: 1.5rem; }
+
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .chart-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .chart-card h3 { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 12px; font-weight: 400; }
+
+  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .cat-tab { padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); transition: all 0.15s; }
+  .cat-tab.active { background: #1D9E75; color: white; border-color: #1D9E75; }
+  .cat-tab:hover:not(.active) { background: var(--color-background-secondary); }
+
+  .splints-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .splint-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 8px; }
+  .splint-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .splint-name { font-size: 14px; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 8px; }
+  .splint-perf { font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .perf-pos { color: #1D9E75; }
+  .perf-neg { color: #E24B4A; }
+  .splint-meta { display: flex; justify-content: space-between; align-items: center; }
+  .splint-valeur { font-size: 15px; font-weight: 500; }
+  .splint-info { font-size: 12px; color: var(--color-text-secondary); }
+  .splint-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
+  .badge-art { background: #E6F1FB; color: #185FA5; }
+  .badge-sport { background: #EAF3DE; color: #3B6D11; }
+  .badge-mode { background: #FAEEDA; color: #854F0B; }
+  .badge-vin { background: #FBEAF0; color: #993556; }
+  .badge-montre { background: #EEEDFE; color: #534AB7; }
+  .badge-voiture { background: #FAECE7; color: #993C1D; }
+
+  .empty-cat { text-align: center; padding: 3rem 1rem; color: var(--color-text-secondary); font-size: 14px; grid-column: 1/-1; }
+  .empty-cat i { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+  .update-section { margin-top: 2rem; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+  .update-section h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .update-section p { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 14px; }
+  .upload-zone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; cursor: pointer; transition: background 0.15s; }
+  .upload-zone:hover { background: var(--color-background-secondary); }
+  .upload-zone input { display: none; }
+  .upload-zone i { font-size: 28px; color: #1D9E75; display: block; margin-bottom: 8px; }
+  .upload-zone p { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+  .upload-zone strong { color: var(--color-text-primary); font-weight: 500; }
+
+  .analyzing { display: none; align-items: center; gap: 10px; padding: 1rem; background: var(--color-background-secondary); border-radius: var(--border-radius-md); margin-top: 10px; font-size: 13px; }
+  .analyzing.show { display: flex; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--color-border-secondary); border-top-color: #1D9E75; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-box { display: none; margin-top: 10px; }
+  .result-box.show { display: block; }
+  .result-preview { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; font-size: 13px; }
+  .result-preview pre { white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: 12px; max-height: 200px; overflow-y: auto; }
+  .apply-btn { margin-top: 10px; padding: 8px 20px; background: #1D9E75; color: white; border: none; border-radius: var(--border-radius-md); font-size: 14px; cursor: pointer; font-weight: 500; }
+  .apply-btn:hover { background: #0F6E56; }
+
+  .last-update { font-size: 12px; color: var(--color-text-secondary); margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--color-border-tertiary); }
+
+  .perf-bar { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; margin-top: 2px; }
+  .perf-bar-fill { height: 100%; border-radius: 2px; background: #1D9E75; }
+  .perf-bar-fill.neg { background: #E24B4A; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div>
+    <h1>Mon portfolio Splint Invest <span id="last-update-header"></span></h1>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Valeur marchandise</div>
+    <div class="kpi-value" id="kpi-valeur">1 070,83 €</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Investi (nominal)</div>
+    <div class="kpi-value blue" id="kpi-nominal">997,50 €</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Performance globale</div>
+    <div class="kpi-value green" id="kpi-perf">+7,4%</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Nombre de splints</div>
+    <div class="kpi-value" id="kpi-splints">20</div>
+  </div>
+</div>
+
+<div class="chart-row">
+  <div class="chart-card">
+    <h3>Répartition par catégorie (valeur)</h3>
+    <div style="position:relative;height:180px;"><canvas id="donutChart" role="img" aria-label="Répartition du portefeuille par catégorie">Art, Sport/Cartes, Mode&Accessoires</canvas></div>
+    <div id="donut-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--color-text-secondary);"></div>
+  </div>
+  <div class="chart-card">
+    <h3>Évolution mensuelle (valeur marchandise)</h3>
+    <div style="position:relative;height:180px;"><canvas id="lineChart" role="img" aria-label="Évolution mensuelle de la valeur du portefeuille">Évolution de la valeur au fil des mois</canvas></div>
+  </div>
+</div>
+
+<div class="section-title">Mes positions</div>
+
+<div class="cat-tabs">
+  <div class="cat-tab active" onclick="filterCat('all')">Tous</div>
+  <div class="cat-tab" onclick="filterCat('Art')">🎨 Art</div>
+  <div class="cat-tab" onclick="filterCat('Sport / Cartes')">🏆 Sport / Cartes</div>
+  <div class="cat-tab" onclick="filterCat('Mode & Accessoires')">👜 Mode & Accessoires</div>
+  <div class="cat-tab" onclick="filterCat('Montres')">⌚ Montres</div>
+  <div class="cat-tab" onclick="filterCat('Voitures')">🚗 Voitures</div>
+  <div class="cat-tab" onclick="filterCat('Vin')">🍷 Vin</div>
+</div>
+
+<div class="splints-grid" id="splints-grid"></div>
+
+<div class="update-section" style="margin-top:2rem;">
+  <h3><i class="ti ti-upload" aria-hidden="true" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:#1D9E75;"></i>Mettre à jour le portfolio</h3>
+  <p>Uploade une ou plusieurs captures d'écran de Splint Invest — l'IA extrait automatiquement les données et met le site à jour.</p>
+  <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
+    <i class="ti ti-photo-up" aria-hidden="true"></i>
+    <p><strong>Cliquer pour choisir</strong> ou glisser-déposer tes screenshots</p>
+    <p style="margin-top:4px;font-size:12px;">Table de bord, Activité, liste d'investissements — toutes les vues acceptées</p>
+  </div>
+  <div class="analyzing" id="analyzing">
+    <div class="spinner"></div>
+    <span id="analyzing-text">Analyse des images en cours...</span>
+  </div>
+  <div class="result-box" id="result-box">
+    <div class="result-preview" id="result-preview"></div>
+    <button class="apply-btn" onclick="applyExtracted()">Appliquer les données extraites</button>
+  </div>
+</div>
+
+<div class="last-update" id="last-update-footer"></div>
+
+<script>
+const SPLINTS_DATA = [
+  { name: "Fernando Botero, Flautista, 2023", cat: "Art", invested: 50, valeur: 57.09, perf: 14.2, date: "09.03.2026", splints: 1 },
+  { name: "Antony Daley, Herefrom", cat: "Art", invested: 50, valeur: 57.42, perf: 14.8, date: "27.02.2026", splints: 1 },
+  { name: "Frida Kahlo, Corporeal field, 1946", cat: "Art", invested: 50, valeur: 49.89, perf: -0.2, date: "04.03.2026", splints: 1 },
+  { name: "Amanda Watt, California Dreaming, 2022", cat: "Art", invested: 50, valeur: 50.18, perf: 0.4, date: "14.03.2026", splints: 1 },
+  { name: "Sunlight to Bodega Bay, Winston Branch (2004)", cat: "Art", invested: 100, valeur: 105.14, perf: 5.1, date: "19.03.2026", splints: 2 },
+  { name: "Maurice Mboa, Transition Énergétique", cat: "Art", invested: 50, valeur: 50.95, perf: 1.9, date: "24.03.2026", splints: 1 },
+  { name: "Celine Ali, The Lady with the Harp (2026)", cat: "Art", invested: 50, valeur: 50.00, perf: 0.0, date: "18.05.2026", splints: 1 },
+  { name: "Cristiano Ronaldo 2021 Immaculate Soccer Laces Portugal Match-Worn Patch 1/1 PSA 7", cat: "Sport / Cartes", invested: 50, valeur: 54.22, perf: 8.4, date: "19.03.2026", splints: 1 },
+  { name: "Peyton Manning 2012 Panini Prizm Gold Base 10of10 PSA 9", cat: "Sport / Cartes", invested: 50, valeur: 50.88, perf: 1.8, date: "07.03.2026", splints: 1 },
+  { name: "Jayson Tatum 2017 Flawless Star Swatch Rookie, 1of5 PSA 8.5 + 10 Auto", cat: "Sport / Cartes", invested: 100, valeur: 104.98, perf: 5.0, date: "25.03.2026", splints: 2 },
+  { name: "Yao Ming 2005 UD Reflections Mirror Image Dual Auto Patch 1of2", cat: "Sport / Cartes", invested: 50, valeur: 54.05, perf: 8.1, date: "14.10.2025", splints: 1 },
+  { name: "Zinedine Zidane 2024 Donruss FIFA Kaboom Black 1of1 PSA 8", cat: "Sport / Cartes", invested: 50, valeur: 59.28, perf: 18.6, date: "14.10.2025", splints: 1 },
+  { name: "Pokémon Neo Discovery 1st Edition Booster Box", cat: "Sport / Cartes", invested: 100, valeur: 105.54, perf: 5.5, date: "06.03.2026", splints: 2 },
+  { name: "Neo Revelation 1st Edition Booster Box", cat: "Sport / Cartes", invested: 50, valeur: 53.14, perf: 6.3, date: "25.03.2026", splints: 1 },
+  { name: "Pokémon S&M Team Up (1 Case 6 Boîtes Boosters) Partie 2", cat: "Sport / Cartes", invested: 50, valeur: 61.09, perf: 22.2, date: "15.10.2025", splints: 1 },
+  { name: "Pokémon XY Ancient Origins – 7 boîtes de boosters scellées en usine", cat: "Sport / Cartes", invested: 47.50, valeur: 50.06, perf: 5.4, date: "26.03.2026", splints: 1 },
+  { name: "Hermès Kelly 28 Gris Pantin Phw Togo", cat: "Mode & Accessoires", invested: 50, valeur: 56.92, perf: 13.8, date: "25.02.2026", splints: 1 },
+];
+
+const CAT_COLORS = {
+  "Art": "#185FA5",
+  "Sport / Cartes": "#3B6D11",
+  "Mode & Accessoires": "#854F0B",
+  "Montres": "#534AB7",
+  "Voitures": "#993C1D",
+  "Vin": "#993556"
+};
+
+const CAT_BADGES = {
+  "Art": "badge-art",
+  "Sport / Cartes": "badge-sport",
+  "Mode & Accessoires": "badge-mode",
+  "Montres": "badge-montre",
+  "Voitures": "badge-voiture",
+  "Vin": "badge-vin"
+};
+
+let currentCat = "all";
+let extractedData = null;
+
+function formatEur(v) { return v.toFixed(2).replace('.', ',') + ' €'; }
+
+function renderGrid(cat) {
+  const grid = document.getElementById('splints-grid');
+  const filtered = cat === 'all' ? SPLINTS_DATA : SPLINTS_DATA.filter(s => s.cat === cat);
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-cat"><i class="ti ti-leaf" aria-hidden="true"></i>Aucun splint dans cette catégorie pour le moment.</div>`;
+    return;
+  }
+  const maxPerf = Math.max(...filtered.map(s => Math.abs(s.perf)));
+  grid.innerHTML = filtered.map(s => {
+    const perfClass = s.perf >= 0 ? 'perf-pos' : 'perf-neg';
+    const fillClass = s.perf >= 0 ? '' : 'neg';
+    const fillW = maxPerf > 0 ? Math.round(Math.abs(s.perf) / maxPerf * 100) : 0;
+    const badge = CAT_BADGES[s.cat] || '';
+    return `<div class="splint-card">
+      <div class="splint-top">
+        <div class="splint-name">${s.name}</div>
+        <div class="splint-perf ${perfClass}">${s.perf >= 0 ? '+' : ''}${s.perf.toFixed(1)}%</div>
+      </div>
+      <div class="perf-bar"><div class="perf-bar-fill ${fillClass}" style="width:${fillW}%"></div></div>
+      <div class="splint-meta">
+        <div class="splint-valeur">${formatEur(s.valeur)}</div>
+        <div class="splint-info">${s.splints} splint${s.splints > 1 ? 's' : ''} · ${s.date}</div>
+      </div>
+      <div><span class="splint-badge ${badge}">${s.cat}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderGrid(cat);
+}
+
+function renderDonut() {
+  const cats = [...new Set(SPLINTS_DATA.map(s => s.cat))];
+  const vals = cats.map(c => SPLINTS_DATA.filter(s => s.cat === c).reduce((a, s) => a + s.valeur, 0));
+  const colors = cats.map(c => CAT_COLORS[c] || '#888');
+  new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: { labels: cats, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+  const legend = document.getElementById('donut-legend');
+  legend.innerHTML = cats.map((c, i) => `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0;"></span>${c} ${formatEur(vals[i])}</span>`).join('');
+}
+
+function renderLine() {
+  const months = ['oct. 25', 'nov. 25', 'déc. 25', 'jan. 26', 'fév. 26', 'mar. 26', 'avr. 26', 'mai 26'];
+  const values = [150, 150, 150, 150, 550, 1020, 1050, 1070.83];
+  new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Valeur (€)',
+        data: values,
+        borderColor: '#1D9E75',
+        backgroundColor: 'rgba(29,158,117,0.08)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#1D9E75',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { font: { size: 11 }, callback: v => v + '€' } }
+      }
+    }
+  });
+}
+
+function setLastUpdate() {
+  const now = new Date();
+  const str = now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  document.getElementById('last-update-header').textContent = '';
+  document.getElementById('last-update-footer').textContent = 'Dernière mise à jour : ' + str;
+}
+
+async function handleUpload(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  document.getElementById('analyzing').classList.add('show');
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('analyzing-text').textContent = `Analyse de ${files.length} image${files.length > 1 ? 's' : ''} en cours...`;
+
+  const toBase64 = file => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Erreur lecture fichier'));
+    r.readAsDataURL(file);
+  });
+
+  try {
+    const imgs = await Promise.all(files.map(async f => ({
+      type: 'image',
+      source: { type: 'base64', media_type: f.type || 'image/jpeg', data: await toBase64(f) }
+    })));
+
+    const prompt = `Tu es un assistant qui extrait des données financières depuis des screenshots de l'application Splint Invest.
+
+Analyse ces images et extrait TOUS les splints (positions d'investissement) visibles.
+
+Pour chaque splint, extrais :
+- name : nom complet de l'actif
+- cat : catégorie parmi "Art", "Sport / Cartes", "Mode & Accessoires", "Montres", "Voitures", "Vin"
+- invested : montant nominal investi en euros (nombre)
+- valeur : valeur marchandise actuelle en euros (nombre)
+- perf : performance en % (nombre, négatif si perte)
+- date : date d'achat format DD.MM.YYYY
+- splints : nombre de splints détenus (entier)
+
+Si tu vois des données globales du portfolio (valeur totale, performance globale), extrais-les aussi dans un objet "portfolio" avec les clés: valeur_totale, nominal_total, perf_globale, nb_splints.
+
+Réponds UNIQUEMENT en JSON valide, sans commentaire, sans backticks, format exact:
+{
+  "portfolio": { "valeur_totale": 0, "nominal_total": 0, "perf_globale": 0, "nb_splints": 0 },
+  "splints": [ { "name": "", "cat": "", "invested": 0, "valeur": 0, "perf": 0, "date": "", "splints": 1 } ]
+}
+
+Si un champ est inconnu, mets null. Catégories: Art pour les oeuvres d'art et peintures, Sport/Cartes pour les cartes Pokémon, cartes sportives et PSA, Mode & Accessoires pour les sacs et accessoires de luxe, Montres pour les montres, Voitures pour les voitures, Vin pour les bouteilles.`;
+
+    const content = [...imgs, { type: 'text', text: prompt }];
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content }]
+      })
+    });
+
+    const data = await resp.json();
+    const text = data.content.map(b => b.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    extractedData = JSON.parse(clean);
+
+    document.getElementById('analyzing').classList.remove('show');
+    document.getElementById('result-box').classList.add('show');
+    document.getElementById('result-preview').innerHTML = `<strong style="font-size:13px;">Données extraites :</strong><br><br>` +
+      (extractedData.portfolio ? `<span style="color:var(--color-text-secondary)">Portfolio :</span> valeur ${extractedData.portfolio.valeur_totale}€ · perf ${extractedData.portfolio.perf_globale}% · ${extractedData.portfolio.nb_splints} splints<br><br>` : '') +
+      `<span style="color:var(--color-text-secondary)">${extractedData.splints?.length || 0} splint(s) détecté(s) :</span><br>` +
+      (extractedData.splints || []).map(s => `• ${s.name} — ${s.valeur}€ (${s.perf >= 0 ? '+' : ''}${s.perf}%)`).join('<br>');
+
+  } catch(e) {
+    document.getElementById('analyzing').classList.remove('show');
+    document.getElementById('result-box').classList.add('show');
+    document.getElementById('result-preview').innerHTML = `<span style="color:#E24B4A;">Erreur lors de l'extraction : ${e.message}. Vérifie que les images sont lisibles.</span>`;
+  }
+  event.target.value = '';
+}
+
+function applyExtracted() {
+  if (!extractedData) return;
+  if (extractedData.splints && extractedData.splints.length > 0) {
+    extractedData.splints.forEach(ns => {
+      if (!ns.name) return;
+      const idx = SPLINTS_DATA.findIndex(s => s.name.toLowerCase().includes(ns.name.toLowerCase().slice(0, 20)));
+      if (idx >= 0) {
+        if (ns.valeur) SPLINTS_DATA[idx].valeur = ns.valeur;
+        if (ns.perf !== null) SPLINTS_DATA[idx].perf = ns.perf;
+        if (ns.invested) SPLINTS_DATA[idx].invested = ns.invested;
+      } else if (ns.name && ns.valeur) {
+        SPLINTS_DATA.push({ name: ns.name, cat: ns.cat || 'Art', invested: ns.invested || 0, valeur: ns.valeur, perf: ns.perf || 0, date: ns.date || '', splints: ns.splints || 1 });
+      }
+    });
+  }
+  if (extractedData.portfolio) {
+    const p = extractedData.portfolio;
+    if (p.valeur_totale) document.getElementById('kpi-valeur').textContent = p.valeur_totale.toFixed(2).replace('.', ',') + ' €';
+    if (p.nominal_total) document.getElementById('kpi-nominal').textContent = p.nominal_total.toFixed(2).replace('.', ',') + ' €';
+    if (p.perf_globale) document.getElementById('kpi-perf').textContent = (p.perf_globale >= 0 ? '+' : '') + p.perf_globale.toFixed(1) + '%';
+    if (p.nb_splints) document.getElementById('kpi-splints').textContent = p.nb_splints;
+  }
+  renderGrid(currentCat);
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('last-update-footer').textContent = 'Dernière mise à jour : ' + new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  extractedData = null;
+}
+
+renderGrid('all');
+renderDonut();
+renderLine();
+setLastUpdate();
+</script>
+</body>
+</html>
